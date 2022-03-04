@@ -6,6 +6,7 @@ import csv
 import scipy.io as sio
 import cv2
 import random
+import numpy as np
 
 random.seed()
 
@@ -23,8 +24,8 @@ with open('caltech/caltech_labels.csv') as csv_file:
 
 sio.loadmat('caltech/ImageData.mat')
 
-train_image=[]
-train_label=[]
+train_images=[]
+train_labels=[]
 test_images=[]
 test_labels=[]
 
@@ -49,14 +50,36 @@ for filename in filename_list:
 
             scrop_img = gray[start_row:end_row, start_col:end_col]
 
-            resized_image = cv2.resize(scrop_img, (70, 100))
+            resized_image = cv2.resize(scrop_img, (70, 100),)
 
             if random.random() > 0.25:
-                train_image.append(resized_image)
-                train_label.append(int(csv_reader[im_num-1][0]))
+                train_images.append(resized_image)
+                train_labels.append(int(csv_reader[im_num-1][0]))
             else:
                 test_images.append(resized_image)
                 test_labels.append(int(csv_reader[im_num-1][0]))
 
 
-            
+#Train the eigen face recognition model
+EIFR_model = cv2.face.EigenFaceRecognizer_create()
+EIFR_model.train(np.array(train_images), np.array(train_labels))
+
+#Train the Fisher face recognition model
+Fisher_model = cv2.face.FisherFaceRecognizer_create()
+Fisher_model.train(np.array(train_images), np.array(train_labels))
+
+#Train the LBPH face recognition model
+LBPH_model = cv2.face.LBPHFaceRecognizer_create()
+LBPH_model.train(np.array(train_images), np.array(train_labels))
+
+#Test the models
+EIFR_predicted_label = []
+EIFR_predicted_confidence = []
+
+EIFR_predicted_label = EIFR_model.predict(np.array(test_images))
+EIFR_predicted_confidence = EIFR_model.predict(np.array(test_images))
+
+print("Eigen Face Recognition Model")
+print("Predicted labels: " + str(EIFR_predicted_label))
+print("Predicted confidences: " + str(EIFR_predicted_confidence))
+
