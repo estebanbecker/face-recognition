@@ -7,8 +7,11 @@ import scipy.io as sio
 import cv2
 import random
 import numpy as np
+import sys
 
 random.seed()
+
+print("Preraring the data...")
 
 filename_list = [f for f in listdir('caltech') if isfile(join('caltech',f))]
 
@@ -59,6 +62,7 @@ for filename in filename_list:
                 test_images.append(resized_image)
                 test_labels.append(int(csv_reader[im_num-1][0]))
 
+print("Train images: ", len(train_images))
 
 #Train the eigen face recognition model
 EIFR_model = cv2.face.EigenFaceRecognizer_create()
@@ -73,13 +77,47 @@ LBPH_model = cv2.face.LBPHFaceRecognizer_create()
 LBPH_model.train(np.array(train_images), np.array(train_labels))
 
 #Test the models
-EIFR_predicted_label = []
-EIFR_predicted_confidence = []
+EIFR_predicted = []
 
-EIFR_predicted_label = EIFR_model.predict(np.array(test_images))
-EIFR_predicted_confidence = EIFR_model.predict(np.array(test_images))
+print("Eigen Face Recognition Model prediction")
 
-print("Eigen Face Recognition Model")
-print("Predicted labels: " + str(EIFR_predicted_label))
-print("Predicted confidences: " + str(EIFR_predicted_confidence))
+for img in test_images:
 
+    EIFR_predicted.append(EIFR_model.predict(img))
+
+Fisher_model_predicted = []
+
+print("Fisher Face Recognition Model prediction")
+
+for img in test_images:
+
+    Fisher_model_predicted.append(Fisher_model.predict(img))
+
+
+LBPH_model_predicted = []
+
+print("LBPH Face Recognition Model prediction")
+
+for img in test_images:
+
+    LBPH_model_predicted.append(LBPH_model.predict(img))
+
+#Evaluate the models
+EIFR_correct = 0
+Fisher_correct = 0
+LBPH_correct = 0
+
+for i in range(len(test_images)):
+
+    if test_labels[i] == EIFR_predicted[i][0]:
+        EIFR_correct += 1
+
+    if test_labels[i] == Fisher_model_predicted[i][0]:
+        Fisher_correct
+
+    if test_labels[i] == LBPH_model_predicted[i][0]:
+        LBPH_correct += 1
+
+print("Eigen Face Recognition Model accuracy: ", EIFR_correct/len(test_images))
+print("Fisher Face Recognition Model accuracy: ", Fisher_correct/len(test_images))
+print("LBPH Face Recognition Model accuracy: ", LBPH_correct/len(test_images))
