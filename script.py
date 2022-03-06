@@ -113,7 +113,7 @@ for i in range(len(test_images)):
         EIFR_correct += 1
 
     if test_labels[i] == Fisher_model_predicted[i][0]:
-        Fisher_correct
+        Fisher_correct += 1
 
     if test_labels[i] == LBPH_model_predicted[i][0]:
         LBPH_correct += 1
