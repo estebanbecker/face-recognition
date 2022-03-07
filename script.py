@@ -11,7 +11,7 @@ import sys
 
 random.seed()
 
-print("Preraring the data...")
+print("Preparing the data...")
 
 filename_list = [f for f in listdir('caltech') if isfile(join('caltech',f))]
 
@@ -121,3 +121,47 @@ for i in range(len(test_images)):
 print("Eigen Face Recognition Model accuracy: ", EIFR_correct/len(test_images))
 print("Fisher Face Recognition Model accuracy: ", Fisher_correct/len(test_images))
 print("LBPH Face Recognition Model accuracy: ", LBPH_correct/len(test_images))
+
+print("HOG+SVM Face Recognition Model prediction")
+
+#Face recognition using HOG+SVM
+
+#Create a HOG
+hog = cv2.HOGDescriptor((70, 100), (10, 10), (5, 5), (5, 5), 9)
+
+hog_train=[]
+hog_test=[]
+
+for image in train_images:
+    hog_train.append(hog.compute(image))
+
+for image in test_images:
+    hog_test.append(hog.compute(image))
+
+
+#Create a SVM
+svm = cv2.ml.SVM_create()
+
+svm.setType(cv2.ml.SVM_C_SVC)
+svm.setKernel(cv2.ml.SVM_LINEAR)
+svm.setTermCriteria((cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-6))
+
+svm.train(np.array(hog_train), cv2.ml.ROW_SAMPLE, np.array(train_labels))
+
+svm_predicted = []
+
+for image in hog_test:
+    image = image.reshape(1, -1)
+
+    svm_predicted.append(svm.predict(np.array(image)))
+
+svm_correct = 0
+
+for i in range(len(test_images)):
+
+    if test_labels[i] == svm_predicted[i][1][0][0]:
+        svm_correct += 1
+
+print("HOG+SVM Face Recognition Model accuracy: ", svm_correct/len(test_images))
+
+print("Done")
